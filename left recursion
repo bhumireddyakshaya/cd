@@ -1,0 +1,51 @@
+#include <stdio.h>
+#include <string.h>
+
+#define MAX_RULES 10
+#define MAX_LEN 100
+
+void eliminateLeftRecursion(char nonTerminal, char alpha[MAX_RULES][MAX_LEN], int alphaCount, char beta[MAX_RULES][MAX_LEN], int betaCount) {
+    if (alphaCount == 0) {
+        printf("No left recursion for %c\n", nonTerminal);
+        return;
+    }
+    
+    char newNonTerminal = nonTerminal + ''';
+    printf("%c -> ", nonTerminal);
+    for (int i = 0; i < betaCount; i++) {
+        printf("%s%c | ", beta[i], newNonTerminal);
+    }
+    printf("\n");
+    
+    printf("%c -> ", newNonTerminal);
+    for (int i = 0; i < alphaCount; i++) {
+        printf("%s%c | ", alpha[i], newNonTerminal);
+    }
+    printf("ε\n");
+}
+
+int main() {
+    char production[MAX_LEN], nonTerminal;
+    char alpha[MAX_RULES][MAX_LEN], beta[MAX_RULES][MAX_LEN];
+    int alphaCount = 0, betaCount = 0;
+    
+    printf("Enter production (e.g., A -> Aa | b): ");
+    fgets(production, MAX_LEN, stdin);
+    
+    char *token = strtok(production, " ->|\n");
+    if (token == NULL) return 1;
+    
+    nonTerminal = token[0];
+    
+    while ((token = strtok(NULL, " |\n")) != NULL) {
+        if (token[0] == nonTerminal) {
+            strcpy(alpha[alphaCount++], token + 1);
+        } else {
+            strcpy(beta[betaCount++], token);
+        }
+    }
+    
+    eliminateLeftRecursion(nonTerminal, alpha, alphaCount, beta, betaCount);
+    
+    return 0;
+}

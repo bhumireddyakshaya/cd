@@ -1,0 +1,60 @@
+#include <stdio.h>
+#include <string.h>
+
+#define MAX_RULES 10
+#define MAX_LEN 100
+
+void eliminateLeftFactoring(char nonTerminal, char productions[MAX_RULES][MAX_LEN], int count) {
+    char commonPrefix[MAX_LEN];
+    int prefixLength = 0;
+    
+    // Find common prefix
+    for (int i = 0; productions[0][i] && productions[1][i]; i++) {
+        if (productions[0][i] == productions[1][i]) {
+            commonPrefix[prefixLength++] = productions[0][i];
+        } else {
+            break;
+        }
+    }
+    commonPrefix[prefixLength] = '\0';
+    
+    if (prefixLength == 0) {
+        printf("No left factoring needed for %c\n", nonTerminal);
+        return;
+    }
+    
+    char newNonTerminal = nonTerminal + ''';
+    printf("%c -> %s%c | ", nonTerminal, commonPrefix, newNonTerminal);
+    for (int i = 2; i < count; i++) {
+        printf("%s | ", productions[i]);
+    }
+    printf("\n");
+    
+    printf("%c -> ", newNonTerminal);
+    for (int i = 0; i < 2; i++) {
+        printf("%s | ", productions[i] + prefixLength);
+    }
+    printf("ε\n");
+}
+
+int main() {
+    char production[MAX_LEN], nonTerminal;
+    char productions[MAX_RULES][MAX_LEN];
+    int count = 0;
+    
+    printf("Enter production (e.g., A -> abc | abd | e): ");
+    fgets(production, MAX_LEN, stdin);
+    
+    char *token = strtok(production, " ->|\n");
+    if (token == NULL) return 1;
+    
+    nonTerminal = token[0];
+    
+    while ((token = strtok(NULL, " |\n")) != NULL) {
+        strcpy(productions[count++], token);
+    }
+    
+    eliminateLeftFactoring(nonTerminal, productions, count);
+    
+    return 0;
+}

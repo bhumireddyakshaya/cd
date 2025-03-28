@@ -1,0 +1,95 @@
+#include <stdio.h>
+#include <ctype.h>
+#include <string.h>
+
+#define MAX_ID_LENGTH 31 // Restrict identifier length
+
+// Function to check if a character is an operator
+int isOperator(char c) {
+    char operators[] = "+-*/=<>!&|^%";
+    for (int i = 0; operators[i] != '\0'; i++) {
+        if (c == operators[i]) return 1;
+    }
+    return 0;
+}
+
+// Function to process tokens
+void processToken(char *token) {
+    if (isdigit(token[0])) {
+        printf("Constant: %s\n", token);
+    } else {
+        printf("Identifier: %s\n", token);
+    }
+}
+
+// Lexical analyzer function
+void lexicalAnalyzer(const char *filename) {
+    FILE *file = fopen(filename, "r");
+    if (!file) {
+        printf("Error: Could not open file %s\n", filename);
+        return;
+    }
+
+    char c, token[MAX_ID_LENGTH + 1];
+    int index = 0, inMultiLineComment = 0;
+
+    while ((c = fgetc(file)) != EOF) {
+        if (inMultiLineComment) {
+            if (c == '*' && (c = fgetc(file)) == '/') {
+                inMultiLineComment = 0;
+                printf("Multi-line Comment End\n");
+            }
+            continue;
+        }
+        
+        if (c == '/') {
+            char next = fgetc(file);
+            if (next == '*') {
+                inMultiLineComment = 1;
+                printf("Multi-line Comment Start\n");
+                continue;
+            } else if (next == '/') {
+                printf("Single-line Comment: ");
+                while ((c = fgetc(file)) != '\n' && c != EOF) {
+                    putchar(c);
+                }
+                printf("\n");
+                continue;
+            } else {
+                ungetc(next, file);
+            }
+        }
+        
+        if (isalpha(c) || c == '_') { // Start of identifier
+            index = 0;
+            do {
+                if (index < MAX_ID_LENGTH) token[index++] = c;
+                c = fgetc(file);
+            } while (isalnum(c) || c == '_');
+            token[index] = '\0';
+            processToken(token);
+            ungetc(c, file);
+        } 
+        else if (isdigit(c)) { // Start of constant
+            index = 0;
+            do {
+                token[index++] = c;
+                c = fgetc(file);
+            } while (isdigit(c));
+            token[index] = '\0';
+            processToken(token);
+            ungetc(c, file);
+        } 
+        else if (isOperator(c)) { // Operator detection
+            printf("Operator: %c\n", c);
+        }
+    }
+
+    fclose(file);
+}
+
+int main() {
+    char filename[] = "input.c"; // Change this to your source file
+    lexicalAnalyzer(filename);
+    return 0;
+}
